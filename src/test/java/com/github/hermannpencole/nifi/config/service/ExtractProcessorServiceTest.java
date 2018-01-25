@@ -1,5 +1,7 @@
 package com.github.hermannpencole.nifi.config.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.hermannpencole.nifi.config.model.ConfigException;
 import com.github.hermannpencole.nifi.config.model.GroupProcessorsEntity;
 import com.github.hermannpencole.nifi.swagger.ApiException;
@@ -7,6 +9,7 @@ import com.github.hermannpencole.nifi.swagger.client.FlowApi;
 import com.github.hermannpencole.nifi.swagger.client.model.ControllerServicesEntity;
 import com.github.hermannpencole.nifi.swagger.client.model.ProcessGroupFlowEntity;
 import com.google.gson.Gson;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -56,9 +59,9 @@ public class ExtractProcessorServiceTest {
     }
 
     @Test
-    public void extractEmptyBranchTest() throws ApiException, IOException, URISyntaxException {
+    public void extractEmptyBranchTestJSON() throws ApiException, IOException, URISyntaxException {
         List<String> branch = Arrays.asList("root", "elt1");
-        File temp = File.createTempFile("tempfile", ".tmp");
+        File temp = File.createTempFile("tempfile", ".json");
 
         ProcessGroupFlowEntity response = TestUtils.createProcessGroupFlowEntity("idComponent", "nameComponent");
 
@@ -80,9 +83,31 @@ public class ExtractProcessorServiceTest {
     }
 
     @Test
-    public void extractBranchTest() throws ApiException, IOException, URISyntaxException {
+    public void extractEmptyBranchTestYAML() throws ApiException, IOException, URISyntaxException {
         List<String> branch = Arrays.asList("root", "elt1");
-        File temp = File.createTempFile("tempfile", ".tmp");
+        File temp = File.createTempFile("tempfile", ".yaml");
+
+        ProcessGroupFlowEntity response = TestUtils.createProcessGroupFlowEntity("idComponent", "nameComponent");
+
+        when(processGroupServiceMock.changeDirectory(branch)).thenReturn(Optional.of(response));
+        when(flowapiMock.getControllerServicesFromGroup("idComponent")).thenReturn(new ControllerServicesEntity());
+
+        extractService.extractByBranch(branch, temp.getAbsolutePath());
+
+        //evaluate response
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try (Reader reader = new InputStreamReader(new FileInputStream(temp), "UTF-8")) {
+            GroupProcessorsEntity result = mapper.readValue(reader, GroupProcessorsEntity.class);
+            assertTrue(result.getProcessors().isEmpty());
+            assertTrue(result.getGroupProcessorsEntity().isEmpty());
+            assertEquals("nameComponent", result.getName());
+        }
+    }
+
+    @Test
+    public void extractBranchTestJSON() throws ApiException, IOException, URISyntaxException {
+        List<String> branch = Arrays.asList("root", "elt1");
+        File temp = File.createTempFile("tempfile", ".json");
 
         ProcessGroupFlowEntity response = TestUtils.createProcessGroupFlowEntity("idComponent", "nameComponent");
         response.getProcessGroupFlow().getFlow()
@@ -102,6 +127,39 @@ public class ExtractProcessorServiceTest {
         Gson gson = new Gson();
         try (Reader reader = new InputStreamReader(new FileInputStream(temp), "UTF-8")) {
             GroupProcessorsEntity result = gson.fromJson(reader, GroupProcessorsEntity.class);
+            assertEquals(1, result.getProcessors().size());
+            assertEquals("nameProc", result.getProcessors().get(0).getName());
+            assertEquals(1,result.getGroupProcessorsEntity().size());
+            assertEquals("nameSubGroup", result.getGroupProcessorsEntity().get(0).getName());
+            assertEquals("nameComponent", result.getName());
+            assertEquals(1, result.getControllerServicesDTO().size());
+            assertEquals("nameCtrl", result.getControllerServicesDTO().get(0).getName());
+        }
+    }
+
+    @Test
+    public void extractBranchTestYAML() throws ApiException, IOException, URISyntaxException {
+        List<String> branch = Arrays.asList("root", "elt1");
+        File temp = File.createTempFile("tempfile", ".yaml");
+
+        ProcessGroupFlowEntity response = TestUtils.createProcessGroupFlowEntity("idComponent", "nameComponent");
+        response.getProcessGroupFlow().getFlow()
+                .getProcessors().add(TestUtils.createProcessorEntity("idProc","nameProc") );
+        response.getProcessGroupFlow().getFlow()
+                .getProcessGroups().add(TestUtils.createProcessGroupEntity("idSubGroup", "nameSubGroup"));
+
+        when(processGroupServiceMock.changeDirectory(branch)).thenReturn(Optional.of(response));
+        ControllerServicesEntity controllerServicesEntity = new ControllerServicesEntity();
+        controllerServicesEntity.getControllerServices().add(TestUtils.createControllerServiceEntity("idCtrl", "nameCtrl"));
+        when(flowapiMock.getControllerServicesFromGroup("idComponent")).thenReturn(controllerServicesEntity);
+
+        ProcessGroupFlowEntity subGroupResponse = TestUtils.createProcessGroupFlowEntity("idSubGroup", "nameSubGroup");
+        when(flowapiMock.getFlow(subGroupResponse.getProcessGroupFlow().getId())).thenReturn(subGroupResponse);
+
+        extractService.extractByBranch(branch, temp.getAbsolutePath());
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try (Reader reader = new InputStreamReader(new FileInputStream(temp), "UTF-8")) {
+            GroupProcessorsEntity result = mapper.readValue(reader, GroupProcessorsEntity.class);
             assertEquals(1, result.getProcessors().size());
             assertEquals("nameProc", result.getProcessors().get(0).getName());
             assertEquals(1,result.getGroupProcessorsEntity().size());

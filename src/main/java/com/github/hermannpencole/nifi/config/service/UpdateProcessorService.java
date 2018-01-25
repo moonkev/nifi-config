@@ -1,5 +1,7 @@
 package com.github.hermannpencole.nifi.config.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.hermannpencole.nifi.config.model.ConfigException;
 import com.github.hermannpencole.nifi.config.model.GroupProcessorsEntity;
 import com.github.hermannpencole.nifi.swagger.ApiException;
@@ -64,10 +66,19 @@ public class UpdateProcessorService {
         }
 
         LOG.info("Processing : " + file.getName());
-        Gson gson = new GsonBuilder().serializeNulls().create();
+
 
         try (Reader reader = new InputStreamReader(new FileInputStream(file), "UTF-8")) {
-            GroupProcessorsEntity configuration = gson.fromJson(reader, GroupProcessorsEntity.class);
+
+            GroupProcessorsEntity configuration;
+            if (fileConfiguration.endsWith(".json")) {
+                Gson gson = new GsonBuilder().serializeNulls().create();
+                configuration = gson.fromJson(reader, GroupProcessorsEntity.class);
+            } else {
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+                configuration = mapper.readValue(reader, GroupProcessorsEntity.class);
+            }
+
             ProcessGroupFlowEntity componentSearch = processGroupService.changeDirectory(branch)
                     .orElseThrow(() -> new ConfigException(("cannot find " + Arrays.toString(branch.toArray()))));
 

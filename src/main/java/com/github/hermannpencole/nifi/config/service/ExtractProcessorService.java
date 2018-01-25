@@ -1,5 +1,10 @@
 package com.github.hermannpencole.nifi.config.service;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SequenceWriter;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.github.hermannpencole.nifi.config.model.ConfigException;
 import com.github.hermannpencole.nifi.config.model.GroupProcessorsEntity;
 import com.github.hermannpencole.nifi.swagger.ApiException;
@@ -67,13 +72,24 @@ public class ExtractProcessorService {
             result.getControllerServicesDTO().add(extractController(controllerServiceEntity));
         }
 
-        //convert to json
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        LOG.debug("saving in file {}", fileConfiguration);
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8")) {
-            gson.toJson(result, writer);
-        } finally {
-            LOG.debug("extractByBranch end");
+        if (fileConfiguration.endsWith(".json")) {
+            //convert to json
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            LOG.debug("saving in file {}", fileConfiguration);
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8")) {
+                gson.toJson(result, writer);
+            } finally {
+                LOG.debug("extractByBranch end");
+            }
+        } else {
+            //convert to yaml
+            YAMLFactory yamlFactory = new YAMLFactory();
+            yamlFactory.configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false);
+            ObjectMapper mapper = new ObjectMapper(yamlFactory);
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            try (SequenceWriter writer = mapper.writerWithDefaultPrettyPrinter().writeValues(file)) {
+                writer.write(result);
+            }
         }
     }
 
