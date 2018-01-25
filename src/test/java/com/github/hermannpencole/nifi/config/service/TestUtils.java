@@ -48,6 +48,7 @@ public class TestUtils {
         procDTO.setName(name);
         procDTO.setId(id);
         procDTO.setConfig(new ProcessorConfigDTO());
+        procDTO.setBundle(new BundleDTO());
         proc.setComponent(procDTO);
         proc.setRevision(new RevisionDTO());
         proc.getRevision().setVersion(100L);
@@ -69,7 +70,9 @@ public class TestUtils {
     public static ControllerServiceEntity createControllerServiceEntity(String id, String name) {
         ControllerServiceEntity controllerService = new ControllerServiceEntity();
         controllerService.setId(id);
-        controllerService.setComponent(new ControllerServiceDTO());
+        ControllerServiceDTO csDTO = new ControllerServiceDTO();
+        csDTO.setBundle(new BundleDTO());
+        controllerService.setComponent(csDTO);
         controllerService.getComponent().setName(name);
         controllerService.getComponent().setId(id);
         controllerService.getComponent().getProperties().put("key", "value");

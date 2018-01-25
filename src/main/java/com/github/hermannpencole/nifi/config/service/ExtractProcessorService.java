@@ -113,6 +113,7 @@ public class ExtractProcessorService {
         ProcessorDTO result = new ProcessorDTO();
         result.setName(processor.getName());
         result.setConfig(processor.getConfig());
+        result.setBundle(processor.getBundle());
         //remove controller link
         for ( Map.Entry<String, PropertyDescriptorDTO> entry : processor.getConfig().getDescriptors().entrySet()) {
             if (entry.getValue().getIdentifiesControllerService() != null) {
@@ -137,6 +138,7 @@ public class ExtractProcessorService {
 
     private ControllerServiceDTO extractController(ControllerServiceEntity controllerServiceEntity) {
         ControllerServiceDTO result = new ControllerServiceDTO();
+        result.setBundle(controllerServiceEntity.getComponent().getBundle());
         result.setName(controllerServiceEntity.getComponent().getName());
         result.setProperties(controllerServiceEntity.getComponent().getProperties());
         result.setPersistsState(null);

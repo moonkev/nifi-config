@@ -9,6 +9,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
+import io.swagger.annotations.Api;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -32,7 +33,7 @@ public class ProcessorServiceTest {
     private ProcessorsApi processorsApiMock;
 
     @Test
-    public void setStateAlreadyTest() {
+    public void setStateAlreadyTest() throws ApiException {
         Injector injector = Guice.createInjector(new AbstractModule() {
             protected void configure() {
                 bind(ProcessorsApi.class).toInstance(processorsApiMock);
@@ -49,7 +50,7 @@ public class ProcessorServiceTest {
     }
 
     @Test
-    public void setStateTest() {
+    public void setStateTest() throws ApiException {
         Injector injector = Guice.createInjector(new AbstractModule() {
             protected void configure() {
                 bind(ProcessorsApi.class).toInstance(processorsApiMock);
@@ -75,7 +76,7 @@ public class ProcessorServiceTest {
     }
 
     @Test(expected = ConfigException.class)
-    public void setStateExceptionTest() {
+    public void setStateExceptionTest() throws ApiException {
         Injector injector = Guice.createInjector(new AbstractModule() {
             protected void configure() {
                 bind(ProcessorsApi.class).toInstance(processorsApiMock);

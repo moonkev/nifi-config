@@ -6,6 +6,7 @@ import com.github.hermannpencole.nifi.swagger.ApiException;
 import com.github.hermannpencole.nifi.swagger.client.FlowApi;
 import com.github.hermannpencole.nifi.swagger.client.ProcessGroupsApi;
 import com.github.hermannpencole.nifi.swagger.client.model.*;
+import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +41,12 @@ public class CreateRouteService {
 
   private String getClientId() {
     if (clientId == null) {
-      clientId = flowapi.generateClientId();
-      LOG.debug("client id generated {}", clientId);
+      try {
+        clientId = flowapi.generateClientId();
+        LOG.debug("client id generated {}", clientId);
+      } catch (ApiException e) {
+        throw new RuntimeException(e);
+      }
     }
     return clientId;
   }
@@ -58,10 +63,16 @@ public class CreateRouteService {
   }
 
   private ProcessGroupFlowEntity advanceToNextProcessGroup( final String processGroupName, final ProcessGroupFlowEntity flowEntity) {
-    return findByComponentName(
-            flowEntity.getProcessGroupFlow().getFlow().getProcessGroups(), processGroupName)
-            .map(flowEntityChild -> flowapi.getFlow(flowEntityChild.getId()))
-            .orElseThrow(() -> new ConfigException("Couldn't find process group '" + processGroupName + "'"));
+      return findByComponentName(
+              flowEntity.getProcessGroupFlow().getFlow().getProcessGroups(), processGroupName)
+              .map(flowEntityChild -> {
+                try {
+                  return flowapi.getFlow(flowEntityChild.getId());
+                } catch (ApiException e) {
+                  throw new RuntimeException(e);
+                }
+              })
+              .orElseThrow(() -> new ConfigException("Couldn't find process group '" + processGroupName + "'"));
   }
 
   private PortEntity createOrFindPort(final String destinationInputPort, final ConnectableDTO.TypeEnum connectableType,
@@ -82,7 +93,11 @@ public class CreateRouteService {
           case OUTPUT_PORT:
             return destination.getComponent().getParentGroupId();
           case INPUT_PORT: default:
-            return flowapi.getFlow(source.getComponent().getParentGroupId()).getProcessGroupFlow().getParentGroupId();
+            try {
+              return flowapi.getFlow(source.getComponent().getParentGroupId()).getProcessGroupFlow().getParentGroupId();
+            } catch (ApiException e) {
+              throw new RuntimeException(e);
+            }
         }
       case INPUT_PORT:
         switch (destination.getComponent().getType()) {
@@ -166,11 +181,16 @@ public class CreateRouteService {
     while (connectables.hasNext()) {
       current = next;
       next = connectables.next();
-      ProcessGroupFlowEntity flowEntity = flowapi.getFlow(determineConnectionLocation(current, next));
-      ConnectionEntity connectionEntity = createConnectionEntity(current, next);
+      try {
+        ProcessGroupFlowEntity flowEntity = flowapi.getFlow(determineConnectionLocation(current, next));
 
-      if (!connectionExists( flowEntity.getProcessGroupFlow().getFlow().getConnections().stream(), connectionEntity)) {
-        processGroupsApi.createConnection(flowEntity.getProcessGroupFlow().getId(), connectionEntity);
+        ConnectionEntity connectionEntity = createConnectionEntity(current, next);
+
+        if (!connectionExists( flowEntity.getProcessGroupFlow().getFlow().getConnections().stream(), connectionEntity)) {
+          processGroupsApi.createConnection(flowEntity.getProcessGroupFlow().getId(), connectionEntity);
+        }
+      } catch (ApiException e) {
+        throw new RuntimeException(e);
       }
     }
   }
@@ -199,22 +219,26 @@ public class CreateRouteService {
     // Find the lowest level in the process group hierarchy where the route can pass between two process groups
     while (!source.next().equals(destination.next())) ;
 
-    // Traverse the source branch, creating output ports down the hierarchy
-    List<PortEntity> sourceConnectables = createPorts(source, name, ConnectableDTO.TypeEnum.OUTPUT_PORT);
-    // Reverse the sequence of the output ports as the connections should point up the hierarchy
-    Collections.reverse(sourceConnectables);
+    try {
+      // Traverse the source branch, creating output ports down the hierarchy
+      List<PortEntity> sourceConnectables = createPorts(source, name, ConnectableDTO.TypeEnum.OUTPUT_PORT);
+      // Reverse the sequence of the output ports as the connections should point up the hierarchy
+      Collections.reverse(sourceConnectables);
 
-    // Traverse the destination branch, creating input ports up the hierarchy
-    List<PortEntity> destinationConnectables = createPorts(destination, name, ConnectableDTO.TypeEnum.INPUT_PORT);
+      // Traverse the destination branch, creating input ports up the hierarchy
+      List<PortEntity> destinationConnectables = createPorts(destination, name, ConnectableDTO.TypeEnum.INPUT_PORT);
 
-    // Switch the two lists of connectables together
-    List<PortEntity> route = new ArrayList<>(sourceConnectables);
-    route.addAll(destinationConnectables);
-    createConnections(route.listIterator());
+      // Switch the two lists of connectables together
+      List<PortEntity> route = new ArrayList<>(sourceConnectables);
+      route.addAll(destinationConnectables);
+      createConnections(route.listIterator());
 
-    // Switch on ports
-    if (startRoute) {
-      startPorts(route.stream());
+      // Switch on ports
+      if (startRoute) {
+        startPorts(route.stream());
+      }
+    } catch (ApiException e) {
+      throw new RuntimeException(e);
     }
   }
 

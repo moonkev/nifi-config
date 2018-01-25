@@ -31,7 +31,7 @@ public class ControllerServicesServiceTest {
     private ControllerServicesApi controllerServicesApiMock;
 
     @Test
-    public void updateControllerServiceTest() throws InterruptedException {
+    public void updateControllerServiceTest() throws InterruptedException, ApiException {
         Injector injector = Guice.createInjector(new AbstractModule() {
             protected void configure() {
                 bind(ControllerServicesApi.class).toInstance(controllerServicesApiMock);

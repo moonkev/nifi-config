@@ -53,17 +53,25 @@ public class ConnectionService {
     public void waitEmptyQueue(ConnectionEntity connectionEntity) throws ApiException {
         try {
             FunctionUtils.runWhile(() -> {
-                ConnectionEntity connection = connectionsApi.getConnection(connectionEntity.getId());
-                LOG.info(" {} : there is {} FlowFile ({} bytes) on the queue ", connection.getId(), connection.getStatus().getAggregateSnapshot().getQueuedCount(), connection.getStatus().getAggregateSnapshot().getQueuedSize());
-                return !connection.getStatus().getAggregateSnapshot().getQueuedCount().equals("0");
+                try {
+                    ConnectionEntity connection = connectionsApi.getConnection(connectionEntity.getId());
+                    LOG.info(" {} : there is {} FlowFile ({} bytes) on the queue ", connection.getId(), connection.getStatus().getAggregateSnapshot().getQueuedCount(), connection.getStatus().getAggregateSnapshot().getQueuedSize());
+                    return !connection.getStatus().getAggregateSnapshot().getQueuedCount().equals("0");
+                } catch (ApiException e) {
+                    throw new RuntimeException(e);
+                }
             }, interval, timeout);
         } catch (TimeoutException e) {
             //empty queue if forced mode
             if (forceMode) {
                 DropRequestEntity dropRequest= flowfileQueuesApi.createDropRequest(connectionEntity.getId());
                 FunctionUtils.runWhile(() -> {
-                    DropRequestEntity drop = flowfileQueuesApi.getDropRequest(connectionEntity.getId(), dropRequest.getDropRequest().getId());
-                    return !drop.getDropRequest().getFinished();
+                    try {
+                        DropRequestEntity drop = flowfileQueuesApi.getDropRequest(connectionEntity.getId(), dropRequest.getDropRequest().getId());
+                        return !drop.getDropRequest().getFinished();
+                    } catch (ApiException ae) {
+                        throw new RuntimeException(ae);
+                    }
                 }, interval, timeout);
                 LOG.info(" {} : {} FlowFile ({} bytes) were removed from the queue", connectionEntity.getId(), dropRequest.getDropRequest().getCurrentCount(), dropRequest.getDropRequest().getCurrentSize());
                 flowfileQueuesApi.removeDropRequest(connectionEntity.getId(), dropRequest.getDropRequest().getId());

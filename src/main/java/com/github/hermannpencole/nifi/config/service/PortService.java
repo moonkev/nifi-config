@@ -117,10 +117,14 @@ public class PortService {
     }
 
     public PortEntity getById(String id, PortDTO.TypeEnum type) {
-        if (type == PortDTO.TypeEnum.INPUT_PORT)
-            return inputPortsApi.getInputPort(id);
-        else
-            return outputPortsApi.getOutputPort(id);
+        try {
+            if (type == PortDTO.TypeEnum.INPUT_PORT)
+                return inputPortsApi.getInputPort(id);
+            else
+                return outputPortsApi.getOutputPort(id);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -137,11 +141,16 @@ public class PortService {
         portEntity.setComponent(new PortDTO());
         portEntity.getRevision().setVersion(0L);
         portEntity.getComponent().setName(name);
-        switch (type) {
-            case INPUT_PORT:
-                return processGroupsApi.createInputPort(processGroupId, portEntity);
-            case OUTPUT_PORT: default:
-                return processGroupsApi.createOutputPort(processGroupId, portEntity);
+        try {
+            switch (type) {
+                case INPUT_PORT:
+                    return processGroupsApi.createInputPort(processGroupId, portEntity);
+                case OUTPUT_PORT:
+                default:
+                    return processGroupsApi.createOutputPort(processGroupId, portEntity);
+            }
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
         }
     }
 

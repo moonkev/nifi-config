@@ -250,7 +250,11 @@ public class ProcessGroupService {
         Set<ProcessGroupFlowDTO> result = new HashSet<>();
         result.add(processGroupFlow);
         for (ProcessGroupEntity processGroup : processGroupFlow.getFlow().getProcessGroups()) {
-            result.add(flowapi.getFlow(processGroup.getId()).getProcessGroupFlow());
+            try {
+                result.add(flowapi.getFlow(processGroup.getId()).getProcessGroupFlow());
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
         }
         return result;
     }
@@ -302,7 +306,7 @@ public class ProcessGroupService {
             } catch (ApiException e) {
                 LOG.info(e.getResponseBody());
                 if (e.getResponseBody() == null || !e.getResponseBody().endsWith("is running")){
-                    throw e;
+                    throw new RuntimeException(e);
                 }
             }
             return processGroupToRemove == null;

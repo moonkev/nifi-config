@@ -57,8 +57,6 @@ public class AccessService {
                 .setBasePath(basePath)
                 .setVerifyingSsl(verifySsl)
                 .setConnectTimeout(connectionTimeout)
-                .setReadTimeout(readTimeout)
-                .setWriteTimeout(writeTimeout)
                 .setDebugging(debugging);
         Configuration.setDefaultApiClient(client);
     }

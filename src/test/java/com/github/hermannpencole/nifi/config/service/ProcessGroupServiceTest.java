@@ -200,10 +200,12 @@ public class ProcessGroupServiceTest {
         assertEquals(2, result.get(0).size());
         assertEquals(6, result.get(1).size());
         assertEquals(5, result.get(2).size());
+        /*  These were depending on order from a set
         assertEquals("3", ((ProcessorEntity)result.get(0).toArray()[0]).getId());
         assertEquals("1", ((ProcessorEntity)result.get(0).toArray()[1]).getId());
         assertEquals("6", ((ProcessorEntity)result.get(2).toArray()[0]).getId());
         assertEquals("7", ((ProcessorEntity)result.get(2).toArray()[1]).getId());
+        */
     }
 
     @Test
@@ -240,10 +242,12 @@ public class ProcessGroupServiceTest {
         assertEquals(2, result.get(0).size());
         assertEquals(7, result.get(1).size());
         assertEquals(5, result.get(2).size());
+        /* These were depending on ordering from a set
         assertEquals("3", ((ProcessorEntity)result.get(0).toArray()[0]).getId());
         assertEquals("1", ((ProcessorEntity)result.get(0).toArray()[1]).getId());
         assertEquals("6", ((ProcessorEntity)result.get(2).toArray()[0]).getId());
         assertEquals("7", ((ProcessorEntity)result.get(2).toArray()[1]).getId());
+        */
     }
 
 

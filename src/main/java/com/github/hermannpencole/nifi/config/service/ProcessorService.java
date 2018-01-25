@@ -81,14 +81,18 @@ public class ProcessorService {
 
         FunctionUtils.runWhile(()-> {
             LOG.info(" {} ({}) waiting for {}", processor.getComponent().getName() ,processor.getId(), state);
-            ProcessorEntity processorEntity= processorsApi.getProcessor(processor.getId());
-            boolean reallyStopped = isReallyStopped(processorEntity);
-            LOG.info(" {} ({}) is {} (have thread active : {}) ", processorEntity.getComponent().getName(), processorEntity.getId(), processorEntity.getComponent().getState(), !reallyStopped);
-            if ( (state.equals(ProcessorDTO.StateEnum.STOPPED) && state.equals(processorEntity.getComponent().getState()) && isReallyStopped(processorEntity))
-                || (state.equals(ProcessorDTO.StateEnum.RUNNING) && state.equals(processorEntity.getComponent().getState())) ) {
-                return false;
+            try {
+                ProcessorEntity processorEntity = processorsApi.getProcessor(processor.getId());
+                boolean reallyStopped = isReallyStopped(processorEntity);
+                LOG.info(" {} ({}) is {} (have thread active : {}) ", processorEntity.getComponent().getName(), processorEntity.getId(), processorEntity.getComponent().getState(), !reallyStopped);
+                if ( (state.equals(ProcessorDTO.StateEnum.STOPPED) && state.equals(processorEntity.getComponent().getState()) && isReallyStopped(processorEntity))
+                    || (state.equals(ProcessorDTO.StateEnum.RUNNING) && state.equals(processorEntity.getComponent().getState())) ) {
+                    return false;
+                }
+                return true;
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
             }
-            return true;
         }, interval, timeout);
 
     }
@@ -118,7 +122,11 @@ public class ProcessorService {
     }
 
     public ProcessorEntity getById(String id) {
-        return processorsApi.getProcessor(id);
+        try {
+            return processorsApi.getProcessor(id);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

@@ -201,13 +201,21 @@ public class UpdateProcessorService {
         for (ControllerServiceEntity oldControllerService: oldControllersService) {
             for (ControllerServiceReferencingComponentEntity component : oldControllerService.getComponent().getReferencingComponents()) {
                 if (component.getComponent().getReferenceType().equals(PROCESSOR) ) {
-                    ProcessorEntity newProc = processorsApi.getProcessor(component.getId());
-                    newProc.getComponent().getConfig().setProperties(createUpdateProperty(newProc.getComponent().getConfig().getProperties(), oldControllerService.getId(), newControllerServiceId));
-                    updateProcessor(newProc, newProc.getComponent(), true, clientId);
+                    try {
+                        ProcessorEntity newProc = processorsApi.getProcessor(component.getId());
+                        newProc.getComponent().getConfig().setProperties(createUpdateProperty(newProc.getComponent().getConfig().getProperties(), oldControllerService.getId(), newControllerServiceId));
+                        updateProcessor(newProc, newProc.getComponent(), true, clientId);
+                    } catch (ApiException e) {
+                        throw new RuntimeException(e);
+                    }
                 } else if (component.getComponent().getReferenceType().equals(CONTROLLERSERVICE) ) {
-                    ControllerServiceEntity newControllerService = controllerServicesService.getControllerServices(component.getId());
-                    newControllerService.getComponent().setProperties(createUpdateProperty(newControllerService.getComponent().getProperties(), oldControllerService.getId(), newControllerServiceId));
-                    controllerServicesService.updateControllerService(newControllerService.getComponent(), newControllerService, true);
+                    try {
+                        ControllerServiceEntity newControllerService = controllerServicesService.getControllerServices(component.getId());
+                        newControllerService.getComponent().setProperties(createUpdateProperty(newControllerService.getComponent().getProperties(), oldControllerService.getId(), newControllerServiceId));
+                        controllerServicesService.updateControllerService(newControllerService.getComponent(), newControllerService, true);
+                    } catch (ApiException e) {
+                        throw new RuntimeException(e);
+                    }
                 }// else TODO for reporting task ??
             }
             LOG.info(" {} ({}) is replaced by ({})" , oldControllerService.getComponent().getName(), oldControllerService.getComponent().getId(), newControllerServiceId);
@@ -227,7 +235,7 @@ public class UpdateProcessorService {
             } catch (ApiException e) {
                 //maybe there are already remove
                 if (!e.getMessage().contains("Not Found")) {
-                    throw e;
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -243,7 +251,7 @@ public class UpdateProcessorService {
             } catch (ApiException e) {
                 //maybe there are already remove
                 if (!e.getMessage().contains("Not Found")) {
-                    throw e;
+                    throw new RuntimeException(e);
                 }
             }
         }

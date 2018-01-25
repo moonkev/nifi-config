@@ -112,9 +112,13 @@ public class ControllerServicesService {
         //Wait disabled
         FunctionUtils.runWhile(()-> {
             LOG.info(" {} ({}) waiting for {}" , controllerServiceEntity.getComponent().getName(), controllerServiceEntity.getId(), state);
-            ControllerServiceEntity controllerService = controllerServicesApi.getControllerService(controllerServiceEntity.getId());
-            LOG.info(" {} ({}) is {}" , controllerService.getComponent().getName(), controllerService.getId(), controllerService.getComponent().getState());
-            return !controllerService.getComponent().getState().equals(state);
+            try {
+                ControllerServiceEntity controllerService = controllerServicesApi.getControllerService(controllerServiceEntity.getId());
+                LOG.info(" {} ({}) is {}" , controllerService.getComponent().getName(), controllerService.getId(), controllerService.getComponent().getState());
+                return !controllerService.getComponent().getState().equals(state);
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
         }, interval, timeout);
         return controllerServiceEntityUpdate;
     }
@@ -139,7 +143,7 @@ public class ControllerServicesService {
                 LOG.info(e.getResponseBody());
                 //how obtain the real state of controllerServiceReference and don't have this bullshit trick
                 if (e.getResponseBody() == null || (!e.getResponseBody().endsWith("Current state is STOPPING") && !e.getResponseBody().endsWith("Current state is RUNNING"))) {
-                    throw e;
+                    throw new RuntimeException(e);
                 } else {
                     return false;
                 }
@@ -180,7 +184,7 @@ public class ControllerServicesService {
                 LOG.info(e.getResponseBody());
                 //how obtain the real state of controllerServiceReference and don't have this bullshit trick
                 if (e.getResponseBody() == null || (!e.getResponseBody().endsWith("Current state is STOPPING") && !e.getResponseBody().endsWith("Current state is RUNNING"))) {
-                    throw e;
+                    throw new RuntimeException(e);
                 } else {
                     return false;
                 }
