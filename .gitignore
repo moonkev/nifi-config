@@ -8,3 +8,7 @@
 /.settings
 /.project
 /.classpath
+/venv
+/config
+.DS_Store
+scratch
