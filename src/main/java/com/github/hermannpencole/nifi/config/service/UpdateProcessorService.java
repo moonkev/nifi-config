@@ -148,7 +148,7 @@ public class UpdateProcessorService {
                     }
                 }
                 if (controllerServiceEntityFind == null) {
-                    throw new ConfigException("Cannot choose controller, multiple controller find with the same name " + controllerServiceDTO.getName() + " on the same group " + idComponent);
+                    throw new ConfigException("Cannot choose controller, multiple controllers found with the same name " + controllerServiceDTO.getName() + " on the same group " + idComponent);
                 }
             } else if (all.size() == 1) {
                 //find controller for have id
@@ -287,7 +287,7 @@ public class UpdateProcessorService {
     private void updateComponent(GroupProcessorsEntity configuration, ProcessGroupFlowEntity componentSearch, String clientId) throws ApiException, InterruptedException {
         FlowDTO flow = componentSearch.getProcessGroupFlow().getFlow();
         configuration.getProcessors().forEach(processorOnConfig -> updateProcessor(
-                findProcByComponentName(flow.getProcessors(), processorOnConfig.getName()), processorOnConfig, false, clientId));
+                findProcByComponent(flow.getProcessors(), processorOnConfig), processorOnConfig, false, clientId));
         updateControllers(configuration, componentSearch.getProcessGroupFlow().getId(), clientId);
         for (GroupProcessorsEntity procGroupInConf : configuration.getProcessGroups()) {
             ProcessGroupEntity processorGroupToUpdate = findByComponentName(flow.getProcessGroups(), procGroupInConf.getName())
@@ -313,6 +313,9 @@ public class UpdateProcessorService {
             processorToUpdate.getComponent().getRelationships().stream()
                     .filter(relationships -> relationships.getAutoTerminate())
                     .forEach(relationships -> autoTerminatedRelationships.add(relationships.getName()));
+            if (componentToPutInProc.getConfig() == null) {
+                componentToPutInProc.setConfig(new ProcessorConfigDTO());
+            }
             componentToPutInProc.getConfig().setAutoTerminatedRelationships(autoTerminatedRelationships);
             componentToPutInProc.getConfig().setDescriptors(processorToUpdate.getComponent().getConfig().getDescriptors());
             componentToPutInProc.getConfig().setDefaultConcurrentTasks(processorToUpdate.getComponent().getConfig().getDefaultConcurrentTasks());
@@ -346,10 +349,20 @@ public class UpdateProcessorService {
     }
 
     //can static => utils
-    public static ProcessorEntity findProcByComponentName(List<ProcessorEntity> listGroup, String name) {
-        return listGroup.stream()
-                .filter(item -> item.getComponent().getName().trim().equals(name.trim()))
-                .findFirst().orElseThrow(() -> new ConfigException(("cannot find " + name)));
+    public static ProcessorEntity findProcByComponent(List<ProcessorEntity> listGroup, ProcessorDTO processorDTO) {
+        if (processorDTO.getId() != null) {
+            return listGroup.stream()
+                    .filter(item -> item.getComponent().getId().trim().equals(processorDTO.getId().trim()))
+                    .findFirst().orElseThrow(() -> new ConfigException(("cannot find processor with id" + processorDTO.getId())));
+        }
+        List<ProcessorEntity> entities = listGroup.stream()
+                .filter(item -> item.getComponent().getName().trim().equals(processorDTO.getName().trim()))
+                .collect(Collectors.toList());
+        if (entities.isEmpty()) {
+            throw new ConfigException(String.format("cannot find processor with name", processorDTO.getName()));
+        } else if (entities.size() > 1) {
+            throw new ConfigException(String.format("multiple processors found for name %s and no id given", processorDTO.getName()));
+        }
+        return entities.get(0);
     }
-
 }
