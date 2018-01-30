@@ -40,11 +40,11 @@ public class ControllerServicesServiceTest {
                 bind(Boolean.class).annotatedWith(Names.named("forceMode")).toInstance(false);
             }
         });
-        ControllerServiceEntity controllerServiceDisabled = TestUtils.createControllerServiceEntity("id","name");
+        ControllerServiceEntity controllerServiceDisabled = TestUtils.createControllerServiceEntity("id","name", "parent");
         controllerServiceDisabled.getComponent().setState(ControllerServiceDTO.StateEnum.DISABLED);
-        ControllerServiceEntity controllerServiceEnabled = TestUtils.createControllerServiceEntity("id","name");
+        ControllerServiceEntity controllerServiceEnabled = TestUtils.createControllerServiceEntity("id","name", "parent");
         controllerServiceEnabled.getComponent().setState(ControllerServiceDTO.StateEnum.ENABLED);
-        ControllerServiceEntity controllerService = TestUtils.createControllerServiceEntity("id","name");
+        ControllerServiceEntity controllerService = TestUtils.createControllerServiceEntity("id","name", "parent");
 
         when(controllerServicesApiMock.getControllerService("id")).thenReturn(controllerServiceDisabled).thenReturn(controllerServiceEnabled);
 

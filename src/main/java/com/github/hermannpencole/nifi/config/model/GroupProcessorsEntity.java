@@ -16,10 +16,10 @@ public class GroupProcessorsEntity {
     private List<ProcessorDTO> processors = new ArrayList<>();
 
     @SerializedName("groupProcessorsEntity")
-    private List<GroupProcessorsEntity> groupProcessorsEntity = new ArrayList<>();
+    private List<GroupProcessorsEntity> processGroups = new ArrayList<>();
 
     @SerializedName("controllerServices")
-    private List<ControllerServiceDTO> controllerServicesDTO = new ArrayList<>();
+    private List<ControllerServiceDTO> controllerServices = new ArrayList<>();
 
     @SerializedName("connections")
     private List<ConnectionPort> connectionPorts = new ArrayList<>();
@@ -36,24 +36,24 @@ public class GroupProcessorsEntity {
         this.processors = processors;
     }
 
-    public List<GroupProcessorsEntity> getGroupProcessorsEntity() {
-        return groupProcessorsEntity;
+    public List<GroupProcessorsEntity> getProcessGroups() {
+        return processGroups;
     }
 
     /**
      *
-     * @param groupProcessorsEntity
+     * @param processGroups
      */
-    public void setGroupProcessorsEntity(List<GroupProcessorsEntity> groupProcessorsEntity) {
-        this.groupProcessorsEntity = groupProcessorsEntity;
+    public void setProcessGroups(List<GroupProcessorsEntity> processGroups) {
+        this.processGroups = processGroups;
     }
 
-    public List<ControllerServiceDTO> getControllerServicesDTO() {
-        return controllerServicesDTO;
+    public List<ControllerServiceDTO> getControllerServices() {
+        return controllerServices;
     }
 
-    public void setControllerServicesDTO(List<ControllerServiceDTO> controllerServicesDTO) {
-        this.controllerServicesDTO = controllerServicesDTO;
+    public void setControllerServices(List<ControllerServiceDTO> controllerServices) {
+        this.controllerServices = controllerServices;
     }
 
     public String getName() {

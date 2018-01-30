@@ -63,15 +63,6 @@ public class ExtractProcessorService {
         //add group processors and processors
         GroupProcessorsEntity result = extractJsonFromComponent(componentSearch);
 
-        //add controllers
-        ControllerServicesEntity controllerServicesEntity = flowapi.getControllerServicesFromGroup(componentSearch.getProcessGroupFlow().getId());
-        if ( !controllerServicesEntity.getControllerServices().isEmpty() ) {
-            result.setControllerServicesDTO(new ArrayList<>());
-        }
-        for (ControllerServiceEntity controllerServiceEntity : controllerServicesEntity.getControllerServices()) {
-            result.getControllerServicesDTO().add(extractController(controllerServiceEntity));
-        }
-
         if (fileConfiguration.endsWith(".json")) {
             //convert to json
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -107,15 +98,24 @@ public class ExtractProcessorService {
         processGroupFlow.getFlow().getProcessors()
                 .forEach(processor -> result.getProcessors().add(extractProcessor(processor.getComponent())));
         for (ProcessGroupEntity processGroups : processGroupFlow.getFlow().getProcessGroups()) {
-            result.getGroupProcessorsEntity().add(extractJsonFromComponent(flowapi.getFlow(processGroups.getId())));
+            result.getProcessGroups().add(extractJsonFromComponent(flowapi.getFlow(processGroups.getId())));
         }
-        if (result.getGroupProcessorsEntity().isEmpty()) {
-            result.setGroupProcessorsEntity(null);
+        if (result.getProcessGroups().isEmpty()) {
+            result.setProcessGroups(null);
         }
         if (result.getProcessors().isEmpty()) {
             result.setProcessors(null);
         }
-        result.setControllerServicesDTO(null);
+        //add controllers
+        ControllerServicesEntity controllerServicesEntity = flowapi.getControllerServicesFromGroup(idComponent.getProcessGroupFlow().getId());
+        if (!controllerServicesEntity.getControllerServices().isEmpty() ) {
+            result.setControllerServices(new ArrayList<>());
+        }
+        for (ControllerServiceEntity controllerServiceEntity : controllerServicesEntity.getControllerServices()) {
+            if (controllerServiceEntity.getComponent().getParentGroupId().equals(idComponent.getProcessGroupFlow().getId())) {
+                result.getControllerServices().add(extractController(controllerServiceEntity));
+            }
+        }
         return result;
     }
 
@@ -154,6 +154,7 @@ public class ExtractProcessorService {
 
     private ControllerServiceDTO extractController(ControllerServiceEntity controllerServiceEntity) {
         ControllerServiceDTO result = new ControllerServiceDTO();
+
         result.setBundle(controllerServiceEntity.getComponent().getBundle());
         result.setName(controllerServiceEntity.getComponent().getName());
         result.setProperties(controllerServiceEntity.getComponent().getProperties());

@@ -106,7 +106,7 @@ public class UpdateProcessorServiceTest {
         when(processGroupServiceMock.changeDirectory(branch)).thenReturn(Optional.of(response));
         when(flowapiMock.getFlow(response.getProcessGroupFlow().getId())).thenReturn(response);
         ControllerServicesEntity controllerServicesEntity = new ControllerServicesEntity();
-        controllerServicesEntity.getControllerServices().add(TestUtils.createControllerServiceEntity("idCtrl", "nameCtrl"));
+        controllerServicesEntity.getControllerServices().add(TestUtils.createControllerServiceEntity("idCtrl", "nameCtrl", "idComponent"));
         when(flowapiMock.getControllerServicesFromGroup("idComponent")).thenReturn(controllerServicesEntity);
         when(controllerServicesServiceMock.setStateControllerService(any(), any())).thenReturn(controllerServicesEntity.getControllerServices().get(0));
         when(controllerServicesServiceMock.updateControllerService(any(), any(), eq(false))).thenReturn(controllerServicesEntity.getControllerServices().get(0));
@@ -115,7 +115,7 @@ public class UpdateProcessorServiceTest {
 
         ArgumentCaptor<ControllerServiceEntity> controllerServiceEntity = ArgumentCaptor.forClass(ControllerServiceEntity.class);
         ArgumentCaptor<ControllerServiceDTO> controllerServiceDTO = ArgumentCaptor.forClass(ControllerServiceDTO.class);
-        verify(controllerServicesServiceMock).updateControllerService(controllerServiceDTO.capture(), controllerServiceEntity.capture(), eq(false));
+        verify(controllerServicesServiceMock, atLeastOnce()).updateControllerService(controllerServiceDTO.capture(), controllerServiceEntity.capture(), eq(false));
         assertEquals("idCtrl", controllerServiceEntity.getValue().getComponent().getId());
         assertEquals(2, controllerServiceDTO.getValue().getProperties().size());
     }

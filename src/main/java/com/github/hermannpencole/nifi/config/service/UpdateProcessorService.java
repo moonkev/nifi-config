@@ -95,7 +95,7 @@ public class UpdateProcessorService {
             String clientId = flowapi.generateClientId();
             updateComponent(configuration, componentSearch, clientId);
 
-            //controller
+            //TODO: REMOVE controller
             updateControllers(configuration, componentSearch.getProcessGroupFlow().getId(), clientId);
 
             //connexion
@@ -133,7 +133,7 @@ public class UpdateProcessorService {
         List<ControllerServiceEntity> controllerDeleted = new ArrayList<>();
 
 
-        for (ControllerServiceDTO controllerServiceDTO : configuration.getControllerServicesDTO()) {
+        for (ControllerServiceDTO controllerServiceDTO : configuration.getControllerServices()) {
             List<ControllerServiceEntity> all = controllerServicesEntity.getControllerServices().stream().filter(item -> item.getComponent().getName().trim().equals(controllerServiceDTO.getName().trim())).collect(Collectors.toList());
 
             ControllerServiceEntity controllerServiceEntityFind = null;
@@ -284,11 +284,12 @@ public class UpdateProcessorService {
      * @param clientId
      * @throws ApiException
      */
-    private void updateComponent(GroupProcessorsEntity configuration, ProcessGroupFlowEntity componentSearch, String clientId) throws ApiException {
+    private void updateComponent(GroupProcessorsEntity configuration, ProcessGroupFlowEntity componentSearch, String clientId) throws ApiException, InterruptedException {
         FlowDTO flow = componentSearch.getProcessGroupFlow().getFlow();
         configuration.getProcessors().forEach(processorOnConfig -> updateProcessor(
                 findProcByComponentName(flow.getProcessors(), processorOnConfig.getName()), processorOnConfig, false, clientId));
-        for (GroupProcessorsEntity procGroupInConf : configuration.getGroupProcessorsEntity()) {
+        updateControllers(configuration, componentSearch.getProcessGroupFlow().getId(), clientId);
+        for (GroupProcessorsEntity procGroupInConf : configuration.getProcessGroups()) {
             ProcessGroupEntity processorGroupToUpdate = findByComponentName(flow.getProcessGroups(), procGroupInConf.getName())
                     .orElseThrow(() -> new ConfigException(("cannot find " + procGroupInConf.getName())));
             updateComponent(procGroupInConf, flowapi.getFlow(processorGroupToUpdate.getId()), clientId);

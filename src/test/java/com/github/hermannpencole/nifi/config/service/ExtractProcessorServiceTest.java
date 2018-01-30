@@ -9,7 +9,6 @@ import com.github.hermannpencole.nifi.swagger.client.FlowApi;
 import com.github.hermannpencole.nifi.swagger.client.model.ControllerServicesEntity;
 import com.github.hermannpencole.nifi.swagger.client.model.ProcessGroupFlowEntity;
 import com.google.gson.Gson;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -75,7 +74,7 @@ public class ExtractProcessorServiceTest {
         try (Reader reader = new InputStreamReader(new FileInputStream(temp), "UTF-8")) {
             GroupProcessorsEntity result = gson.fromJson(reader, GroupProcessorsEntity.class);
             assertTrue(result.getProcessors().isEmpty());
-            assertTrue(result.getGroupProcessorsEntity().isEmpty());
+            assertTrue(result.getProcessGroups().isEmpty());
             assertEquals("nameComponent", result.getName());
         }
 
@@ -99,7 +98,7 @@ public class ExtractProcessorServiceTest {
         try (Reader reader = new InputStreamReader(new FileInputStream(temp), "UTF-8")) {
             GroupProcessorsEntity result = mapper.readValue(reader, GroupProcessorsEntity.class);
             assertTrue(result.getProcessors().isEmpty());
-            assertTrue(result.getGroupProcessorsEntity().isEmpty());
+            assertTrue(result.getProcessGroups().isEmpty());
             assertEquals("nameComponent", result.getName());
         }
     }
@@ -117,8 +116,10 @@ public class ExtractProcessorServiceTest {
 
         when(processGroupServiceMock.changeDirectory(branch)).thenReturn(Optional.of(response));
         ControllerServicesEntity controllerServicesEntity = new ControllerServicesEntity();
-        controllerServicesEntity.getControllerServices().add(TestUtils.createControllerServiceEntity("idCtrl", "nameCtrl"));
+        controllerServicesEntity.getControllerServices().add(TestUtils.createControllerServiceEntity("idCtrl", "nameCtrl", "idComponent"));
         when(flowapiMock.getControllerServicesFromGroup("idComponent")).thenReturn(controllerServicesEntity);
+        ControllerServicesEntity subGroupControllerServicesEntity = new ControllerServicesEntity();
+        when(flowapiMock.getControllerServicesFromGroup("idSubGroup")).thenReturn(subGroupControllerServicesEntity);
 
         ProcessGroupFlowEntity subGroupResponse = TestUtils.createProcessGroupFlowEntity("idSubGroup", "nameSubGroup");
         when(flowapiMock.getFlow(subGroupResponse.getProcessGroupFlow().getId())).thenReturn(subGroupResponse);
@@ -129,11 +130,11 @@ public class ExtractProcessorServiceTest {
             GroupProcessorsEntity result = gson.fromJson(reader, GroupProcessorsEntity.class);
             assertEquals(1, result.getProcessors().size());
             assertEquals("nameProc", result.getProcessors().get(0).getName());
-            assertEquals(1,result.getGroupProcessorsEntity().size());
-            assertEquals("nameSubGroup", result.getGroupProcessorsEntity().get(0).getName());
+            assertEquals(1,result.getProcessGroups().size());
+            assertEquals("nameSubGroup", result.getProcessGroups().get(0).getName());
             assertEquals("nameComponent", result.getName());
-            assertEquals(1, result.getControllerServicesDTO().size());
-            assertEquals("nameCtrl", result.getControllerServicesDTO().get(0).getName());
+            assertEquals(1, result.getControllerServices().size());
+            assertEquals("nameCtrl", result.getControllerServices().get(0).getName());
         }
     }
 
@@ -150,8 +151,10 @@ public class ExtractProcessorServiceTest {
 
         when(processGroupServiceMock.changeDirectory(branch)).thenReturn(Optional.of(response));
         ControllerServicesEntity controllerServicesEntity = new ControllerServicesEntity();
-        controllerServicesEntity.getControllerServices().add(TestUtils.createControllerServiceEntity("idCtrl", "nameCtrl"));
+        controllerServicesEntity.getControllerServices().add(TestUtils.createControllerServiceEntity("idCtrl", "nameCtrl", "idComponent"));
         when(flowapiMock.getControllerServicesFromGroup("idComponent")).thenReturn(controllerServicesEntity);
+        ControllerServicesEntity subGroupControllerServicesEntity = new ControllerServicesEntity();
+        when(flowapiMock.getControllerServicesFromGroup("idSubGroup")).thenReturn(subGroupControllerServicesEntity);
 
         ProcessGroupFlowEntity subGroupResponse = TestUtils.createProcessGroupFlowEntity("idSubGroup", "nameSubGroup");
         when(flowapiMock.getFlow(subGroupResponse.getProcessGroupFlow().getId())).thenReturn(subGroupResponse);
@@ -162,11 +165,11 @@ public class ExtractProcessorServiceTest {
             GroupProcessorsEntity result = mapper.readValue(reader, GroupProcessorsEntity.class);
             assertEquals(1, result.getProcessors().size());
             assertEquals("nameProc", result.getProcessors().get(0).getName());
-            assertEquals(1,result.getGroupProcessorsEntity().size());
-            assertEquals("nameSubGroup", result.getGroupProcessorsEntity().get(0).getName());
+            assertEquals(1,result.getProcessGroups().size());
+            assertEquals("nameSubGroup", result.getProcessGroups().get(0).getName());
             assertEquals("nameComponent", result.getName());
-            assertEquals(1, result.getControllerServicesDTO().size());
-            assertEquals("nameCtrl", result.getControllerServicesDTO().get(0).getName());
+            assertEquals(1, result.getControllerServices().size());
+            assertEquals("nameCtrl", result.getControllerServices().get(0).getName());
         }
     }
 

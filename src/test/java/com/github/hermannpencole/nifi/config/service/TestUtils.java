@@ -67,7 +67,7 @@ public class TestUtils {
         return connectionEntity;
     }
 
-    public static ControllerServiceEntity createControllerServiceEntity(String id, String name) {
+    public static ControllerServiceEntity createControllerServiceEntity(String id, String name, String parentId) {
         ControllerServiceEntity controllerService = new ControllerServiceEntity();
         controllerService.setId(id);
         ControllerServiceDTO csDTO = new ControllerServiceDTO();
@@ -75,6 +75,7 @@ public class TestUtils {
         controllerService.setComponent(csDTO);
         controllerService.getComponent().setName(name);
         controllerService.getComponent().setId(id);
+        controllerService.getComponent().setParentGroupId(parentId);
         controllerService.getComponent().getProperties().put("key", "value");
         controllerService.setRevision(createRevision(10L));
         return controllerService;
