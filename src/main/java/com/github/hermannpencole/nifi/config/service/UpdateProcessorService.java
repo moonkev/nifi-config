@@ -162,7 +162,7 @@ public class UpdateProcessorService {
             updateOldReference(oldControllersService.values(), controllerServiceEntityFind.getId(), clientId);
             controllerDeleted.addAll(oldControllersService.values());
             controllerUpdated.add(controllerServiceEntityFind);
-            if (controllerServiceDTO.getProperties() != null && !controllerServiceDTO.getProperties().isEmpty()) {
+            if (controllerServiceDTO.getProperties() != null || controllerServiceDTO.getBundle() != null) {
                 //stopping referencing processors and reporting tasks
                 controllerServicesService.setStateReferenceProcessors(controllerServiceEntityFind, UpdateControllerServiceReferenceRequestEntity.StateEnum.STOPPED);
 
