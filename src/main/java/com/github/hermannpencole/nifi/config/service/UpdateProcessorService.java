@@ -93,10 +93,10 @@ public class UpdateProcessorService {
 
             //generate clientID
             String clientId = flowapi.generateClientId();
-            updateComponent(configuration, componentSearch, clientId);
+            updateComponent(configuration, componentSearch, clientId, optionNoStartProcessors);
 
             //TODO: REMOVE controller
-            updateControllers(configuration, componentSearch.getProcessGroupFlow().getId(), clientId);
+            updateControllers(configuration, componentSearch.getProcessGroupFlow().getId(), clientId, optionNoStartProcessors);
 
             //connexion
             createRouteService.createRoutes(configuration.getConnectionPorts(), optionNoStartProcessors);
@@ -122,7 +122,7 @@ public class UpdateProcessorService {
      * @param idComponent
      * @throws ApiException
      */
-    private void updateControllers(GroupProcessorsEntity configuration, String idComponent, String clientId) throws ApiException, InterruptedException {
+    private void updateControllers(GroupProcessorsEntity configuration, String idComponent, String clientId, boolean optionNoStartProcessors) throws ApiException, InterruptedException {
         ControllerServicesEntity controllerServicesEntity = flowapi.getControllerServicesFromGroup(idComponent);
         //must we use flowapi.getControllerServicesFromController() ??
         /*ControllerServicesEntity controllerServiceController = flowapi.getControllerServicesFromController();
@@ -189,11 +189,12 @@ public class UpdateProcessorService {
             controllerServicesService.setStateReferencingControllerServices(controllerServiceEntity.getId(), UpdateControllerServiceReferenceRequestEntity.StateEnum.ENABLED);
         }
         //start ref processor in separate way because the processor can have multiple controller
-        for (ControllerServiceEntity controllerServiceEntity : controllerUpdated) {
-            //Starting referencing processors and reporting tasks
-            controllerServicesService.setStateReferenceProcessors(controllerServiceEntity, UpdateControllerServiceReferenceRequestEntity.StateEnum.RUNNING);
+        if (!optionNoStartProcessors) {
+            for (ControllerServiceEntity controllerServiceEntity : controllerUpdated) {
+                //Starting referencing processors and reporting tasks
+                controllerServicesService.setStateReferenceProcessors(controllerServiceEntity, UpdateControllerServiceReferenceRequestEntity.StateEnum.RUNNING);
+            }
         }
-
         //must we start all controller referencing on the group ?
        // for (ControllerServiceEntity controllerServiceEntity :  controllerServicesEntity.getControllerServices()) {
             //Enabling this controller service
@@ -284,15 +285,15 @@ public class UpdateProcessorService {
      * @param clientId
      * @throws ApiException
      */
-    private void updateComponent(GroupProcessorsEntity configuration, ProcessGroupFlowEntity componentSearch, String clientId) throws ApiException, InterruptedException {
+    private void updateComponent(GroupProcessorsEntity configuration, ProcessGroupFlowEntity componentSearch, String clientId, boolean optionNoStartProcessors) throws ApiException, InterruptedException {
         FlowDTO flow = componentSearch.getProcessGroupFlow().getFlow();
         configuration.getProcessors().forEach(processorOnConfig -> updateProcessor(
                 findProcByComponent(flow.getProcessors(), processorOnConfig), processorOnConfig, false, clientId));
-        updateControllers(configuration, componentSearch.getProcessGroupFlow().getId(), clientId);
+        updateControllers(configuration, componentSearch.getProcessGroupFlow().getId(), clientId, optionNoStartProcessors);
         for (GroupProcessorsEntity procGroupInConf : configuration.getProcessGroups()) {
             ProcessGroupEntity processorGroupToUpdate = findByComponentName(flow.getProcessGroups(), procGroupInConf.getName())
                     .orElseThrow(() -> new ConfigException(("cannot find " + procGroupInConf.getName())));
-            updateComponent(procGroupInConf, flowapi.getFlow(processorGroupToUpdate.getId()), clientId);
+            updateComponent(procGroupInConf, flowapi.getFlow(processorGroupToUpdate.getId()), clientId, optionNoStartProcessors);
         }
     }
 
