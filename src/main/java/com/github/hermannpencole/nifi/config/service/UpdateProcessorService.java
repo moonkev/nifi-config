@@ -288,7 +288,7 @@ public class UpdateProcessorService {
     private void updateComponent(GroupProcessorsEntity configuration, ProcessGroupFlowEntity componentSearch, String clientId, boolean optionNoStartProcessors) throws ApiException, InterruptedException {
         FlowDTO flow = componentSearch.getProcessGroupFlow().getFlow();
         configuration.getProcessors().forEach(processorOnConfig -> updateProcessor(
-                findProcByComponent(flow.getProcessors(), processorOnConfig), processorOnConfig, false, clientId));
+                findProcByComponentName(flow.getProcessors(), processorOnConfig.getName()), processorOnConfig, false, clientId));
         updateControllers(configuration, componentSearch.getProcessGroupFlow().getId(), clientId, optionNoStartProcessors);
         for (GroupProcessorsEntity procGroupInConf : configuration.getProcessGroups()) {
             ProcessGroupEntity processorGroupToUpdate = findByComponentName(flow.getProcessGroups(), procGroupInConf.getName())
@@ -350,20 +350,9 @@ public class UpdateProcessorService {
     }
 
     //can static => utils
-    public static ProcessorEntity findProcByComponent(List<ProcessorEntity> listGroup, ProcessorDTO processorDTO) {
-        if (processorDTO.getId() != null) {
-            return listGroup.stream()
-                    .filter(item -> item.getComponent().getId().trim().equals(processorDTO.getId().trim()))
-                    .findFirst().orElseThrow(() -> new ConfigException(("cannot find processor with id" + processorDTO.getId())));
-        }
-        List<ProcessorEntity> entities = listGroup.stream()
-                .filter(item -> item.getComponent().getName().trim().equals(processorDTO.getName().trim()))
-                .collect(Collectors.toList());
-        if (entities.isEmpty()) {
-            throw new ConfigException(String.format("cannot find processor with name", processorDTO.getName()));
-        } else if (entities.size() > 1) {
-            throw new ConfigException(String.format("multiple processors found for name %s and no id given", processorDTO.getName()));
-        }
-        return entities.get(0);
+    public static ProcessorEntity findProcByComponentName(List<ProcessorEntity> listGroup, String name) {
+        return listGroup.stream()
+            .filter(item -> item.getComponent().getName().trim().equals(name.trim()))
+            .findFirst().orElseThrow(() -> new ConfigException(("cannot find " + name)));
     }
 }

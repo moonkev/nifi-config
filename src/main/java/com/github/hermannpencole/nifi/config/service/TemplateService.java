@@ -18,6 +18,8 @@ import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -71,9 +73,25 @@ public class TemplateService {
      * @throws URISyntaxException
      * @throws ApiException
      */
-    public void installOnBranch(List<String> branch, String fileConfiguration, boolean keepTemplate) throws ApiException {
+    public void installOnBranch(List<String> branch, String fileConfiguration, boolean keepTemplate, boolean bumpRCtoRelease) throws ApiException {
+
         ProcessGroupFlowDTO processGroupFlow = processGroupService.createDirectory(branch).getProcessGroupFlow();
-        File file = new File(fileConfiguration);
+        File file;
+        if (bumpRCtoRelease) {
+            try {
+                file = File.createTempFile("template", "xml");
+                String content = new String(Files.readAllBytes(Paths.get(fileConfiguration)));
+                content = content.replaceAll(
+                        "<version>(\\d{2}\\.\\d{1,2}\\.\\d{1,2})(\\.RC\\d+|\\-SNAPSHOT)</version>",
+                        "<version>$1.RELEASE</version>");
+                Files.write(file.toPath(), content.getBytes());
+            } catch (IOException e) {
+                LOG.error("Unable to create tempfile to rewrite template", e);
+                return;
+            }
+        } else {
+            file = new File(fileConfiguration);
+        }
 
         TemplatesEntity templates = flowApi.getTemplates();
         String name = FilenameUtils.getBaseName(file.getName());
@@ -133,10 +151,5 @@ public class TemplateService {
         }
 
         processGroupService.delete(processGroupFlow.get().getProcessGroupFlow().getId());
-
     }
-
-
-
-
 }

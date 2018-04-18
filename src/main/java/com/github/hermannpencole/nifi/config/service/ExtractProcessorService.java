@@ -130,7 +130,6 @@ public class ExtractProcessorService {
         result.setName(processor.getName());
         result.setConfig(processor.getConfig());
         result.setBundle(processor.getBundle());
-        result.setId(processor.getId());
         //remove controller link
         for ( Map.Entry<String, PropertyDescriptorDTO> entry : processor.getConfig().getDescriptors().entrySet()) {
             if (entry.getValue().getIdentifiesControllerService() != null) {

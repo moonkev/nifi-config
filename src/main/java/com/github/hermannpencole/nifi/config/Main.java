@@ -79,6 +79,8 @@ public class Main {
             options.addOption("keepTemplate", false, "Keep template after installation (default false)");
             options.addOption("placeWidth", true, "Width of place for installing group (default 1935 : 430 * (4 + 1/2) = 4 pro line)");
             options.addOption("startPosition", true, "Starting position for the place for installing group, format x,y (default : 0,0)");
+            options.addOption("forceVersion", true, "Version to replace RC/RELEASE based bundle versions");
+            options.addOption("bumpRCtoRelease", false, "Change RC versions to release versions");
 
             // parse the command line arguments
             CommandLine cmd = commandLineParser.parse(options, args);
@@ -143,7 +145,7 @@ public class Main {
                     LOG.info("The group configuration {} is extrated on file {}", branch, fileConfiguration);
                 } else if ("deployTemplate".equals(cmd.getOptionValue("m"))) {
                     TemplateService templateService = injector.getInstance(TemplateService.class);
-                    templateService.installOnBranch(branchList, fileConfiguration, cmd.hasOption("keepTemplate"));
+                    templateService.installOnBranch(branchList, fileConfiguration, cmd.hasOption("keepTemplate"), cmd.hasOption("bumpRCtoRelease"));
                     LOG.info("Template {} is installed on the group {}", fileConfiguration, branch);
                 } else {
                     TemplateService templateService = injector.getInstance(TemplateService.class);
